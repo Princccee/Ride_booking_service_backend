@@ -14,7 +14,7 @@ public class Ride extends base{
 
     //Many rides can belong to a single user
     @ManyToOne
-    @JoinColumn(name = "rider_id")
+    @JoinColumn(name = "rider_id", nullable = false)
     private User rider;
 
     // many rides can also belong to a single driver
