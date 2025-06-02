@@ -1,7 +1,11 @@
 package com.ridebooking.model;
 
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @Table(name = "drivers")
@@ -31,6 +35,10 @@ public class Driver extends base{
 
     @Column(nullable = false, unique = true)
     private String licenceNumber;
+
+    @OneToMany(mappedBy = "driver")
+    @JsonIgnore
+    private List<Ride> rides;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
