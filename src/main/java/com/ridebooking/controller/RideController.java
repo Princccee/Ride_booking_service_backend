@@ -5,10 +5,7 @@ import com.ridebooking.model.Ride;
 import com.ridebooking.service.RideService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("api/rides")
@@ -20,5 +17,11 @@ public class RideController {
     public ResponseEntity<?> bookRide(@RequestBody RideRequest request) {
         Ride ride = rideService.createRide(request);
         return ResponseEntity.ok(ride);
+    }
+
+    @PostMapping("/{rideId}/accept")
+    public ResponseEntity<String> acceptRide(@PathVariable Long rideId){
+        rideService.acceptRide(rideId);
+        return ResponseEntity.ok("Ride accepted successfully");
     }
 }

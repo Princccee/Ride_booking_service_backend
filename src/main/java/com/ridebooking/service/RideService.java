@@ -46,4 +46,17 @@ public class RideService {
 
         return rideRepository.save(ride);
     }
+
+    public void acceptRide(Long rideId) {
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("Ride not found"));
+
+        if (ride.getStatus() != rideStatus.REQUESTED) {
+            throw new RuntimeException("Ride is not in a REQUESTED state");
+        }
+
+        ride.setStatus(rideStatus.ACCEPTED);
+        rideRepository.save(ride);
+    }
+
 }
