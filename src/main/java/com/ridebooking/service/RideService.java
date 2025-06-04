@@ -8,6 +8,8 @@ import com.ridebooking.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 public class RideService {
 
@@ -55,7 +57,20 @@ public class RideService {
             throw new RuntimeException("Ride is not in a REQUESTED state");
         }
 
-        ride.setStatus(rideStatus.ACCEPTED);
+        ride.setStatus(rideStatus.ACCEPTED); // update the ride status
+        rideRepository.save(ride);
+    }
+
+    public void startRide(Long rideId){
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("Ride not found"));
+
+        if(ride.getStatus() != rideStatus.ACCEPTED){
+            throw new RuntimeException("Ride is not in a ACCEPTED state");
+        }
+
+        ride.setStatus(rideStatus.STARTED); // update the ride status
+        ride.setStartTime(LocalDateTime.now());
         rideRepository.save(ride);
     }
 

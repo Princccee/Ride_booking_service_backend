@@ -3,6 +3,8 @@ package com.ridebooking.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -27,6 +29,9 @@ public class Ride extends base{
 
     @Column(nullable = false)
     private String dropoffLocation;
+
+    @Column(name = "start_time")
+    private LocalDateTime startTime;
 
     @Enumerated(EnumType.STRING)
     private rideStatus status;

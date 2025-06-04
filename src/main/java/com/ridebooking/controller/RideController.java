@@ -24,4 +24,10 @@ public class RideController {
         rideService.acceptRide(rideId);
         return ResponseEntity.ok("Ride accepted successfully");
     }
+
+    @PostMapping("/{rideId}/start")
+    public ResponseEntity<String> startRide(@PathVariable("rideId") Long rideId){
+        rideService.startRide(rideId);
+        return ResponseEntity.ok("Ride started successfully");
+    }
 }
