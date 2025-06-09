@@ -121,5 +121,12 @@ public class RideService {
        return rideRepository.save(ride);
     }
 
+    public rideStatus getRideStatus(Long rideId){
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("Ride doesn't exists"));
+
+        return ride.getStatus();
+    }
+
 
 }
