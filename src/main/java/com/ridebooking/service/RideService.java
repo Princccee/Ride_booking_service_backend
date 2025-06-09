@@ -87,7 +87,7 @@ public class RideService {
         double fare = 100.0;
 
         //Update the fields of a ride:
-        ride.setDropoffLocation(String.valueOf(rideStatus.COMPLETED));
+        ride.setStatus(rideStatus.COMPLETED);
         ride.setFare(fare);
         ride.setCompletionTime(LocalDateTime.now());
 
@@ -98,5 +98,28 @@ public class RideService {
 
         return rideRepository.save(ride);
     }
+
+
+    public Ride cancelRide(Long rideId) {
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("Ride not found"));
+
+        if (ride.getStatus() == rideStatus.COMPLETED || ride.getStatus() == rideStatus.CANCELLED) {
+            throw new RuntimeException("Ride is already completed or cancelled");
+        }
+
+        // Update the status of the ride to CANCELLED
+        ride.setStatus(rideStatus.CANCELLED);
+
+        // Set driver to AVAILABLE if assigned
+        if (ride.getDriver() != null) {
+            Driver driver = ride.getDriver();
+            driver.setStatus(driverStatus.AVAILABLE);
+            driverRepository.save(driver);
+        }
+
+       return rideRepository.save(ride);
+    }
+
 
 }

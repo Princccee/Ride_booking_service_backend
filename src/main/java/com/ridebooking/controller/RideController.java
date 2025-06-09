@@ -42,5 +42,16 @@ public class RideController {
         }
     }
 
+    @PostMapping("/{rideId}/cancel")
+    public ResponseEntity<?> cancelRide(@PathVariable Long rideId){
+        try{
+            Ride cancelRide = rideService.cancelRide(rideId);
+            return ResponseEntity.ok(cancelRide);
+        }
+        catch (RuntimeException e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 
 }
