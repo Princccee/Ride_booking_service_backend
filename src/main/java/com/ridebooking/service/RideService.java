@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Service
 public class RideService {
@@ -72,6 +73,30 @@ public class RideService {
         ride.setStatus(rideStatus.STARTED); // update the ride status
         ride.setStartTime(LocalDateTime.now());
         rideRepository.save(ride);
+    }
+
+    public Ride completeRide(Long rideId){
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(()-> new RuntimeException("Ride doesn't exist"));
+
+        if(ride.getStatus() != rideStatus.STARTED){
+            throw new RuntimeException("Ride is not in STARTED state");
+        }
+
+        // Calculate the fare based on the distance and time taken in the ride:
+        double fare = 100.0;
+
+        //Update the fields of a ride:
+        ride.setDropoffLocation(String.valueOf(rideStatus.COMPLETED));
+        ride.setFare(fare);
+        ride.setCompletionTime(LocalDateTime.now());
+
+        //mark the driver as available again:
+        Driver driver = ride.getDriver();
+        driver.setStatus(driverStatus.AVAILABLE);
+        driverRepository.save(driver);
+
+        return rideRepository.save(ride);
     }
 
 }

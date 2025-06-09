@@ -30,4 +30,17 @@ public class RideController {
         rideService.startRide(rideId);
         return ResponseEntity.ok("Ride started successfully");
     }
+
+    @PostMapping("/{rideId}/complete")
+    public ResponseEntity<?> completeRide(@PathVariable Long rideId){
+        try{
+            Ride compleRide = rideService.completeRide(rideId);
+            return ResponseEntity.ok(compleRide);
+        }
+        catch (RuntimeException e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+
 }

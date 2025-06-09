@@ -31,7 +31,15 @@ public class Ride extends base{
     private String dropoffLocation;
 
     @Column(name = "start_time")
+    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime startTime;
+
+    @Column(name = "end_time")
+    @Temporal(TemporalType.TIMESTAMP)
+    private LocalDateTime completionTime;
+
+    @Column(name = "fare")
+    private Double fare;
 
     @Enumerated(EnumType.STRING)
     private rideStatus status;
