@@ -56,4 +56,10 @@ public class Ride extends base{
     @Column
     private String driverFeedback;
 
+    @Column
+    private Double distanceKm;
+
+    @Column
+    private Double durationMinutes;
+
 }

@@ -36,15 +36,13 @@ public class RideController {
     }
 
     @PostMapping("/{rideId}/complete")
-    public ResponseEntity<?> completeRide(@PathVariable Long rideId){
-        try{
-            Ride compleRide = rideService.completeRide(rideId);
-            return ResponseEntity.ok(compleRide);
-        }
-        catch (RuntimeException e){
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<String> completeRide(@PathVariable Long rideId,
+                                               @RequestParam double distanceKm,
+                                               @RequestParam double durationMinutes) {
+        rideService.completeRide(rideId, distanceKm, durationMinutes);
+        return ResponseEntity.ok("Ride completed and fare calculated.");
     }
+
 
     @PostMapping("/{rideId}/cancel")
     public ResponseEntity<?> cancelRide(@PathVariable Long rideId){

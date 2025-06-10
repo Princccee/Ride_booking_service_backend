@@ -78,7 +78,7 @@ public class RideService {
         rideRepository.save(ride);
     }
 
-    public Ride completeRide(Long rideId){
+    public Ride completeRide(Long rideId, double distance, double duration){
         Ride ride = rideRepository.findById(rideId)
                 .orElseThrow(()-> new RuntimeException("Ride doesn't exist"));
 
@@ -87,11 +87,12 @@ public class RideService {
         }
 
         // Calculate the fare based on the distance and time taken in the ride:
-        double fare = 100.0;
+        ride.setDistanceKm(distance);
+        ride.setDurationMinutes(duration);
 
         //Update the fields of a ride:
+        ride.setFare(calculateFare(distance, duration));
         ride.setStatus(rideStatus.COMPLETED);
-        ride.setFare(fare);
         ride.setCompletionTime(LocalDateTime.now());
 
         //mark the driver as available again:
@@ -169,6 +170,14 @@ public class RideService {
         Driver driver = driverRepository.findById(driverId)
                 .orElseThrow(()-> new RuntimeException("Driver doesn't exist"));
         return rideRepository.findByDriverAndStatusIn(driver, List.of(rideStatus.ACCEPTED, rideStatus.STARTED));
+    }
+
+    private double calculateFare(double distanceKm, double durationMinutes){
+        double baseFare = 30;
+        double ratePerKm = 10;
+        double ratePerMin = 2;
+
+        return baseFare + (ratePerKm * distanceKm) + (ratePerMin * durationMinutes);
     }
 
 
