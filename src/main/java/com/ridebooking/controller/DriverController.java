@@ -36,4 +36,10 @@ public class DriverController {
 
         return ResponseEntity.ok().body("Bearer " + token);
     }
+
+    @PostMapping("/{id}/availability")
+    public ResponseEntity<?> driverAvailability(@PathVariable Long id){
+        Driver driver = driverService.toggleAvailability(id);
+        return ResponseEntity.ok(driver);
+    }
 }

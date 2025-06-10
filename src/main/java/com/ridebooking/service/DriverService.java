@@ -40,4 +40,19 @@ public class DriverService {
         return driverRepo.findByUsername(username);
     }
 
+    public Driver toggleAvailability(Long driverId){
+        Driver driver = driverRepo.findById(driverId)
+                .orElseThrow(()-> new RuntimeException("Driver doesn't exist"));
+
+        if(driver.getStatus() == driverStatus.ON_RIDE)
+            throw new RuntimeException("Can't toggle rn, as driver status is ON_RIDE");
+
+        if(driver.getStatus() == driverStatus.AVAILABLE)
+            driver.setStatus(driverStatus.OFFLINE);
+        else if(driver.getStatus() == driverStatus.OFFLINE)
+            driver.setStatus(driverStatus.AVAILABLE);
+
+        return driverRepo.save(driver);
+    }
+
 }
