@@ -1,5 +1,6 @@
 package com.ridebooking.controller;
 
+import com.ridebooking.dto.RideRatingRequest;
 import com.ridebooking.dto.RideRequest;
 import com.ridebooking.model.Ride;
 import com.ridebooking.model.rideStatus;
@@ -79,5 +80,10 @@ public class RideController {
         return ResponseEntity.ok(rides);
     }
 
+    @PostMapping("/rate")
+    public ResponseEntity<?> rateRide(@RequestBody RideRatingRequest request){
+        rideService.rateRide(request);
+        return ResponseEntity.ok("rating submitted successfully");
+    }
 
 }

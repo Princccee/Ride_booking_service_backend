@@ -1,5 +1,6 @@
 package com.ridebooking.service;
 
+import com.ridebooking.dto.RideRatingRequest;
 import com.ridebooking.dto.RideRequest;
 import com.ridebooking.model.*;
 import com.ridebooking.repository.DriverRepository;
@@ -135,6 +136,26 @@ public class RideService {
 
     public List<Ride> getDirverRideHistory(Long driverId){
         return rideRepository.findByDriverId(driverId);
+    }
+
+    public void rateRide(RideRatingRequest request){
+        Ride ride = rideRepository.findById(request.getRideId())
+                .orElseThrow(()-> new RuntimeException("Ride not found"));
+
+        if(ride.getStatus() != rideStatus.COMPLETED)
+            throw  new RuntimeException("Can't rate a ride that is not in COMPLETED state");
+
+        // rating by driver:
+        if(request.isDriver()){
+            ride.setDriverRating(request.getRating());
+            ride.setDriverFeedback(request.getFeedback());
+        }
+        else{
+            ride.setUserRating(request.getRating());
+            ride.setUserFeedback(request.getFeedback());
+        }
+
+        rideRepository.save(ride);
     }
 
 }

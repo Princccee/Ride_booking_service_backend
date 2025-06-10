@@ -43,4 +43,17 @@ public class Ride extends base{
 
     @Enumerated(EnumType.STRING)
     private rideStatus status;
+
+    @Column
+    private Integer userRating;
+
+    @Column
+    private Integer driverRating;
+
+    @Column
+    private String userFeedback;
+
+    @Column
+    private String driverFeedback;
+
 }
