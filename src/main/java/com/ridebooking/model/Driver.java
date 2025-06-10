@@ -43,4 +43,10 @@ public class Driver extends base{
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private driverStatus status; // 'AVAILABLE', 'ON_RIDE', etc.
+
+    @Column
+    private Double currentLatitude;
+
+    @Column
+    private Double currentLongitude;
 }

@@ -61,4 +61,13 @@ public class DriverService {
         return driverRepo.findByStatus(driverStatus.AVAILABLE);
     }
 
+    public void updateDriverLocation(Long driverId, Double lat, Double lon) {
+        Driver driver = driverRepo.findById(driverId)
+                .orElseThrow(() -> new RuntimeException("Driver not found"));
+
+        driver.setCurrentLatitude(lat);
+        driver.setCurrentLongitude(lon);
+        driverRepo.save(driver);
+    }
+
 }

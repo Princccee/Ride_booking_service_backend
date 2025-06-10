@@ -1,6 +1,7 @@
 package com.ridebooking.controller;
 
 
+import com.ridebooking.dto.DriverLocationUpdateRequest;
 import com.ridebooking.dto.DriverLoginRequest;
 import com.ridebooking.dto.DriverRegisterRequest;
 import com.ridebooking.model.Driver;
@@ -49,5 +50,14 @@ public class DriverController {
     public ResponseEntity<List<Driver>> getAvailableDrivers(){
         List<Driver> availableDrivers =  driverService.getAvailableDrivers();
         return ResponseEntity.ok(availableDrivers);
+    }
+
+    @PostMapping("/{driverId}/location")
+    public ResponseEntity<String> updateLocation(
+            @PathVariable Long driverId,
+            @RequestBody DriverLocationUpdateRequest request) {
+
+        driverService.updateDriverLocation(driverId, request.getLatitude(), request.getLongitude());
+        return ResponseEntity.ok("Driver location updated");
     }
 }
