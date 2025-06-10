@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class RideService {
@@ -157,5 +158,18 @@ public class RideService {
 
         rideRepository.save(ride);
     }
+
+    public Optional<Ride> getCurrentRideForUser(Long userID){
+        User user = userRepository.findById(userID)
+                .orElseThrow(()-> new RuntimeException("User doesn't exists"));
+        return rideRepository.findByRiderAndStatusIn(user, List.of(rideStatus.ACCEPTED, rideStatus.STARTED));
+    }
+
+    public Optional<Ride> getCurrentRideForDriver(Long driverId){
+        Driver driver = driverRepository.findById(driverId)
+                .orElseThrow(()-> new RuntimeException("Driver doesn't exist"));
+        return rideRepository.findByDriverAndStatusIn(driver, List.of(rideStatus.ACCEPTED, rideStatus.STARTED));
+    }
+
 
 }

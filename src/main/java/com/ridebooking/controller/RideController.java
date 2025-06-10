@@ -86,4 +86,18 @@ public class RideController {
         return ResponseEntity.ok("rating submitted successfully");
     }
 
+    @GetMapping("/user/{userId}/current")
+    public ResponseEntity<?> getCurrentRideForUser(@PathVariable Long userId) {
+        return rideService.getCurrentRideForUser(userId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/driver/{driverId}/current")
+    public ResponseEntity<?> getCurrentRideForDriver(@PathVariable Long driverId){
+        return rideService.getCurrentRideForDriver(driverId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
 }
