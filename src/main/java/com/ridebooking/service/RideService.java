@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class RideService {
@@ -128,5 +129,12 @@ public class RideService {
         return ride.getStatus();
     }
 
+    public List<Ride> getUserRideHistory(Long userId){
+        return rideRepository.findByRiderId(userId);
+    }
+
+    public List<Ride> getDirverRideHistory(Long driverId){
+        return rideRepository.findByDriverId(driverId);
+    }
 
 }

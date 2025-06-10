@@ -6,8 +6,9 @@ import com.ridebooking.model.rideStatus;
 import com.ridebooking.service.RideService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.method.P;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("api/rides")
@@ -64,6 +65,18 @@ public class RideController {
         catch (RuntimeException e){
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @PostMapping("/user/{userId}/rides")
+    public ResponseEntity<List<Ride>> getUserRideHistory(@PathVariable Long userId){
+        List<Ride> rides = rideService.getUserRideHistory(userId);
+        return ResponseEntity.ok(rides);
+    }
+
+    @PostMapping("/driver/{driverId}/rides")
+    public ResponseEntity<List<Ride>> getDriverRideHistory(@PathVariable Long driverId){
+        List<Ride> rides = rideService.getDirverRideHistory(driverId);
+        return ResponseEntity.ok(rides);
     }
 
 
