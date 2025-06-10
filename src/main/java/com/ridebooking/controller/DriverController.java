@@ -12,6 +12,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("api/driver")
 @RequiredArgsConstructor
@@ -41,5 +43,11 @@ public class DriverController {
     public ResponseEntity<?> driverAvailability(@PathVariable Long id){
         Driver driver = driverService.toggleAvailability(id);
         return ResponseEntity.ok(driver);
+    }
+
+    @GetMapping("/available")
+    public ResponseEntity<List<Driver>> getAvailableDrivers(){
+        List<Driver> availableDrivers =  driverService.getAvailableDrivers();
+        return ResponseEntity.ok(availableDrivers);
     }
 }

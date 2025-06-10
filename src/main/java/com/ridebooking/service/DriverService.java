@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class DriverService {
@@ -53,6 +55,10 @@ public class DriverService {
             driver.setStatus(driverStatus.AVAILABLE);
 
         return driverRepo.save(driver);
+    }
+
+    public List<Driver> getAvailableDrivers(){
+        return driverRepo.findByStatus(driverStatus.AVAILABLE);
     }
 
 }
