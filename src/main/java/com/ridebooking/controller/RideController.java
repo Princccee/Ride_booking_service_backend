@@ -24,8 +24,11 @@ public class RideController {
     }
 
     @PostMapping("/{rideId}/accept")
-    public ResponseEntity<String> acceptRide(@PathVariable Long rideId){
-        rideService.acceptRide(rideId);
+    public ResponseEntity<String> acceptRide(
+            @PathVariable Long rideId,
+            @RequestParam Long driverId) {
+
+        rideService.acceptRide(rideId, driverId);
         return ResponseEntity.ok("Ride accepted successfully");
     }
 

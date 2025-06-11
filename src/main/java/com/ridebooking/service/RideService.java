@@ -1,5 +1,6 @@
 package com.ridebooking.service;
 
+import com.ridebooking.dto.RideNotification;
 import com.ridebooking.dto.RideRatingRequest;
 import com.ridebooking.dto.RideRequest;
 import com.ridebooking.model.*;
@@ -7,6 +8,7 @@ import com.ridebooking.repository.DriverRepository;
 import com.ridebooking.repository.RideRepository;
 import com.ridebooking.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,34 +28,38 @@ public class RideService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
     public Ride createRide(RideRequest request) {
-        // Get user
+        // Step 1: Fetch User
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Find first available driver (for now, no geo logic)
-        Driver driver = driverRepository.findAll().stream()
-                .filter(d -> d.getStatus() == driverStatus.AVAILABLE)
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("No available drivers"));
-
-        // Update driver status
-        driver.setStatus(driverStatus.ON_RIDE);
-        driverRepository.save(driver);
-
-        // Create ride
+        // Step 2: Create ride WITHOUT assigning driver
         Ride ride = Ride.builder()
                 .pickupLocation(request.getPickupLocation())
                 .dropoffLocation(request.getDropLocation())
                 .rider(user)
-                .driver(driver)
                 .status(rideStatus.REQUESTED)
                 .build();
 
-        return rideRepository.save(ride);
+        Ride savedRide = rideRepository.save(ride);
+
+        // Step 3: Notify all AVAILABLE drivers via WebSocket
+        RideNotification notification = new RideNotification(
+                savedRide.getId(),
+                savedRide.getPickupLocation(),
+                savedRide.getDropoffLocation()
+        );
+
+        messagingTemplate.convertAndSend("/driver/notifications", notification);
+
+        // Step 4: Return ride object (status = REQUESTED)
+        return savedRide;
     }
 
-    public void acceptRide(Long rideId) {
+    public void acceptRide(Long rideId, Long driverId) {
         Ride ride = rideRepository.findById(rideId)
                 .orElseThrow(() -> new RuntimeException("Ride not found"));
 
@@ -61,9 +67,25 @@ public class RideService {
             throw new RuntimeException("Ride is not in a REQUESTED state");
         }
 
-        ride.setStatus(rideStatus.ACCEPTED); // update the ride status
+        Driver driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new RuntimeException("Driver not found"));
+
+        if (driver.getStatus() != driverStatus.AVAILABLE) {
+            throw new RuntimeException("Driver is not available");
+        }
+
+        // Assign driver to the ride
+        ride.setDriver(driver);
+        ride.setStatus(rideStatus.ACCEPTED);
+
+        // Update driver status
+        driver.setStatus(driverStatus.ON_RIDE);
+
+        // Save both updates
+        driverRepository.save(driver);
         rideRepository.save(ride);
     }
+
 
     public void startRide(Long rideId){
         Ride ride = rideRepository.findById(rideId)
