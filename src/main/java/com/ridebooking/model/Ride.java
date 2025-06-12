@@ -30,6 +30,12 @@ public class Ride extends base{
     @Column(nullable = false)
     private String dropoffLocation;
 
+    @Column(nullable = false)
+    private double pickupLattitude;
+
+    @Column(nullable = false)
+    private double pickupLongitude;
+
     @Column(name = "start_time")
     @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime startTime;

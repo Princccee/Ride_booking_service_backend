@@ -1,5 +1,6 @@
 package com.ridebooking.service;
 
+import com.ridebooking.dto.RideAcceptedNotification;
 import com.ridebooking.dto.RideNotification;
 import com.ridebooking.dto.RideRatingRequest;
 import com.ridebooking.dto.RideRequest;
@@ -12,9 +13,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class RideService {
@@ -31,22 +31,19 @@ public class RideService {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    public Ride createRide(RideRequest request) {
-        // Step 1: Fetch User
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    private static final double EARTH_RADIUS_KM = 6371;
 
-        // Step 2: Create ride WITHOUT assigning driver
-        Ride ride = Ride.builder()
-                .pickupLocation(request.getPickupLocation())
-                .dropoffLocation(request.getDropLocation())
-                .rider(user)
-                .status(rideStatus.REQUESTED)
-                .build();
+    private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return EARTH_RADIUS_KM * c;
+    }
 
-        Ride savedRide = rideRepository.save(ride);
-
-        // Step 3: Notify all AVAILABLE drivers via WebSocket
+    private void notifyNearbyDrivers(Ride savedRide){
         RideNotification notification = new RideNotification(
                 savedRide.getId(),
                 savedRide.getPickupLocation(),
@@ -54,6 +51,60 @@ public class RideService {
         );
 
         messagingTemplate.convertAndSend("/driver/notifications", notification);
+    }
+
+    private void notifyRideTakenToOtherDrivers(Long rideId, Long acceptedDriverId) {
+        String destination = "/topic/ride/" + rideId + "/taken";
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("rideId", rideId);
+        payload.put("acceptedDriverId", acceptedDriverId);
+        payload.put("message", "Ride #" + rideId + " has been accepted by another driver.");
+
+        messagingTemplate.convertAndSend(destination, payload);
+    }
+
+    public Ride createRide(RideRequest request) {
+        // Step 1: Fetch User
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+//        double pickupLat = request.getPickupLattitude();
+//        double pickupLng = request.getPickupLongitude();
+//
+//        // proximity to search in for the drivers
+//        double radiusKm = 5.0;
+//
+//        List<Driver> nearbyDrivers = driverRepository.findAll().stream()
+//                .filter(driver -> driver.getStatus() == driverStatus.AVAILABLE)
+//                .filter(driver -> driver.getCurrentLatitude() != null && driver.getCurrentLongitude() != null)
+//                .filter(driver -> calculateDistance(pickupLat, pickupLng, driver.getCurrentLatitude(), driver.getCurrentLongitude()) <= radiusKm)
+//                .toList();
+//
+//        if(nearbyDrivers.isEmpty()) throw new RuntimeException("Now driver available now");
+
+        // Step 2: Create ride WITHOUT assigning driver
+        Ride ride = Ride.builder()
+                .pickupLocation(request.getPickupLocation())
+                .dropoffLocation(request.getDropLocation())
+                .pickupLattitude(request.getPickupLattitude())
+                .pickupLongitude(request.getPickupLongitude())
+                .rider(user)
+                .status(rideStatus.REQUESTED)
+                .build();
+
+        Ride savedRide = rideRepository.save(ride);
+
+        // Step 3: Notify all AVAILABLE drivers via WebSocket
+        notifyNearbyDrivers(savedRide);
+
+//        RideNotification notification = new RideNotification(
+//                savedRide.getId(),
+//                savedRide.getPickupLocation(),
+//                savedRide.getDropoffLocation()
+//        );
+//
+//        messagingTemplate.convertAndSend("/driver/notifications", notification);
 
         // Step 4: Return ride object (status = REQUESTED)
         return savedRide;
@@ -63,9 +114,12 @@ public class RideService {
         Ride ride = rideRepository.findById(rideId)
                 .orElseThrow(() -> new RuntimeException("Ride not found"));
 
-        if (ride.getStatus() != rideStatus.REQUESTED) {
-            throw new RuntimeException("Ride is not in a REQUESTED state");
-        }
+        if(ride.getStatus() != rideStatus.REQUESTED && ride.getDriver() != null)
+            throw new RuntimeException("Ride has already been accepted");
+
+//        if (ride.getStatus() != rideStatus.REQUESTED) {
+//            throw new RuntimeException("Ride is not in a REQUESTED state");
+//        }
 
         Driver driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new RuntimeException("Driver not found"));
@@ -84,6 +138,9 @@ public class RideService {
         // Save both updates
         driverRepository.save(driver);
         rideRepository.save(ride);
+
+        // Notify other drivers (WebSocket) that ride has been taken
+        notifyRideTakenToOtherDrivers(rideId, driverId);
     }
 
 
