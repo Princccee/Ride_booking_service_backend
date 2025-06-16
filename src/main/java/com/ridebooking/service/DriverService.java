@@ -42,13 +42,16 @@ public class DriverService {
         return driverRepo.findByUsername(username);
     }
 
+    // This function enables drivers to mark that they are ready to accept rides or not
     public Driver toggleAvailability(Long driverId){
         Driver driver = driverRepo.findById(driverId)
                 .orElseThrow(()-> new RuntimeException("Driver doesn't exist"));
 
+        // If the driver is already on a ride
         if(driver.getStatus() == driverStatus.ON_RIDE)
             throw new RuntimeException("Can't toggle rn, as driver status is ON_RIDE");
 
+        // If the current state is AVAILABLE make it OFFLINE and vice-versa
         if(driver.getStatus() == driverStatus.AVAILABLE)
             driver.setStatus(driverStatus.OFFLINE);
         else if(driver.getStatus() == driverStatus.OFFLINE)
@@ -61,6 +64,7 @@ public class DriverService {
         return driverRepo.findByStatus(driverStatus.AVAILABLE);
     }
 
+    // function to keep updating the driver's lve location in the DB
     public void updateDriverLocation(Long driverId, Double lat, Double lon) {
         Driver driver = driverRepo.findById(driverId)
                 .orElseThrow(() -> new RuntimeException("Driver not found"));
@@ -69,5 +73,13 @@ public class DriverService {
         driver.setCurrentLongitude(lon);
         driverRepo.save(driver);
     }
+
+    public void updateFcmToken(Long driverId, String token) {
+        Driver driver = driverRepo.findById(driverId)
+                .orElseThrow(() -> new RuntimeException("Driver not found"));
+        driver.setFcmToken(token);
+        driverRepo.save(driver);
+    }
+
 
 }

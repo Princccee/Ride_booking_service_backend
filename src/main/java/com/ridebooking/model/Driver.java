@@ -49,4 +49,7 @@ public class Driver extends base{
 
     @Column
     private Double currentLongitude;
+
+    @Column
+    private String fcmToken;
 }
