@@ -43,6 +43,25 @@ public class RideService {
         return EARTH_RADIUS_KM * c;
     }
 
+    // Using Haversine distance between pickup & drop to compute the fare
+    private double calculateFare(double distanceKm, double durationMinutes){
+        double baseFare = 30;
+        double ratePerKm = 10;
+        double ratePerMin = 2;
+
+        return baseFare + (ratePerKm * distanceKm) + (ratePerMin * durationMinutes);
+    }
+
+    public double estimateFare(double pickupLat, double pickupLng, double dropLat, double dropLng) {
+        double distanceKm = calculateDistance(pickupLat, pickupLng, dropLat, dropLng);
+
+        // Estimated duration based on average speed (e.g., 40 km/h)
+        double averageSpeedKmPerHr = 40.0;
+        double estimatedDurationMin = (distanceKm / averageSpeedKmPerHr) * 60;
+
+        return calculateFare(distanceKm, estimatedDurationMin);
+    }
+
     private void notifyRideTakenToOtherDrivers(Long rideId, Long acceptedDriverId, List<Driver> nearbyDrivers) {
         for (Driver d : nearbyDrivers) {
             if (!d.getId().equals(acceptedDriverId) && d.getFcmToken() != null) {
@@ -252,13 +271,7 @@ public class RideService {
         return rideRepository.findByDriverAndStatusIn(driver, List.of(rideStatus.ACCEPTED, rideStatus.STARTED));
     }
 
-    private double calculateFare(double distanceKm, double durationMinutes){
-        double baseFare = 30;
-        double ratePerKm = 10;
-        double ratePerMin = 2;
 
-        return baseFare + (ratePerKm * distanceKm) + (ratePerMin * durationMinutes);
-    }
 
 
 }

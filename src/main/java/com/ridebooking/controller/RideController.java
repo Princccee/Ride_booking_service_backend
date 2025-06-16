@@ -9,7 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("api/rides")
@@ -99,6 +102,19 @@ public class RideController {
         return rideService.getCurrentRideForDriver(driverId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/estimate")
+    public ResponseEntity<Map<String, Object>> estimateFare(
+            @RequestParam double pickupLat,
+            @RequestParam double pickupLng,
+            @RequestParam double dropLat,
+            @RequestParam double dropLng
+    ){
+        double estimatedFare = rideService.estimateFare(pickupLat, pickupLng, dropLat, dropLng);
+        Map<String, Object> response = new HashMap<>();
+        response.put("estimatedFare", Math.round(estimatedFare * 100.0) / 100.0);
+        return ResponseEntity.ok(response);
     }
 
 }
