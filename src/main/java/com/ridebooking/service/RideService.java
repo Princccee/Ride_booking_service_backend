@@ -1,5 +1,6 @@
 package com.ridebooking.service;
 
+import com.razorpay.Order;
 import com.ridebooking.dto.RideRatingRequest;
 import com.ridebooking.dto.RideRequest;
 import com.ridebooking.model.*;
@@ -30,6 +31,9 @@ public class RideService {
 
     @Autowired
     private FCMService fcmService;
+
+    @Autowired
+    private PaymentService paymentService;
 
     private static final double EARTH_RADIUS_KM = 6371;
 
@@ -177,28 +181,75 @@ public class RideService {
         rideRepository.save(ride);
     }
 
-    public void completeRide(Long rideId, double distance, double duration){
-        Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(()-> new RuntimeException("Ride doesn't exist"));
+//    public void completeRide(Long rideId, double distance, double duration){
+//        Ride ride = rideRepository.findById(rideId)
+//                .orElseThrow(()-> new RuntimeException("Ride doesn't exist"));
+//
+//        if(ride.getStatus() != rideStatus.STARTED){
+//            throw new RuntimeException("Ride is not in STARTED state");
+//        }
+//
+//        // Calculate the fare based on the distance and time taken in the ride:
+//        ride.setDistanceKm(distance);
+//        ride.setDurationMinutes(duration);
+//
+//        //Update the fields of a ride:
+//        ride.setFare(calculateFare(distance, duration));
+//        ride.setStatus(rideStatus.COMPLETED);
+//        ride.setCompletionTime(LocalDateTime.now());
+//
+//        //mark the driver as available again:
+//        Driver driver = ride.getDriver();
+//        driver.setStatus(driverStatus.AVAILABLE);
+//        driverRepository.save(driver);
+//
+//        rideRepository.save(ride);
+//
+//        // Generate payment order via Razorpay
+//        Order order = paymentService.createOrder(ride.getFare(), "ride_" + rideId);
+//
+//        ride.setTransactionId(order.get("id")); // Razorpay order ID
+//        ride.setPaymentStatus("PENDING"); // Until confirmed from frontend/webhook
+//        rideRepository.save(ride);
+//    }
 
-        if(ride.getStatus() != rideStatus.STARTED){
+    public void completeRide(Long rideId, double distance, double duration) {
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("Ride doesn't exist"));
+
+        if (ride.getStatus() != rideStatus.STARTED) {
             throw new RuntimeException("Ride is not in STARTED state");
         }
 
-        // Calculate the fare based on the distance and time taken in the ride:
+        // Set distance and duration
         ride.setDistanceKm(distance);
         ride.setDurationMinutes(duration);
 
-        //Update the fields of a ride:
-        ride.setFare(calculateFare(distance, duration));
+        // Calculate fare
+        double fare = calculateFare(distance, duration);
+        ride.setFare(fare);
+
+        // Set completion status & time
         ride.setStatus(rideStatus.COMPLETED);
         ride.setCompletionTime(LocalDateTime.now());
 
-        //mark the driver as available again:
+        // Mark driver as available again
         Driver driver = ride.getDriver();
         driver.setStatus(driverStatus.AVAILABLE);
         driverRepository.save(driver);
 
+        // Generate Razorpay payment order
+        try {
+            Order razorpayOrder = paymentService.createOrder(fare, "ride_" + rideId);
+
+            // Store transaction ID & mark payment as PENDING
+            ride.setTransactionId(razorpayOrder.get("id"));
+            ride.setPaymentStatus(paymentStatus.PENDING);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create Razorpay payment order: " + e.getMessage());
+        }
+
+        // Save ride
         rideRepository.save(ride);
     }
 

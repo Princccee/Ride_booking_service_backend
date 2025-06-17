@@ -68,4 +68,9 @@ public class Ride extends base{
     @Column
     private Double durationMinutes;
 
+    @Enumerated(EnumType.STRING)
+    private paymentStatus paymentStatus;
+
+    @Column
+    private String transactionId;
 }

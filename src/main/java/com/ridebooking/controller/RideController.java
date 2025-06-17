@@ -3,7 +3,9 @@ package com.ridebooking.controller;
 import com.ridebooking.dto.RideRatingRequest;
 import com.ridebooking.dto.RideRequest;
 import com.ridebooking.model.Ride;
+import com.ridebooking.model.paymentStatus;
 import com.ridebooking.model.rideStatus;
+import com.ridebooking.repository.RideRepository;
 import com.ridebooking.service.RideService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,8 @@ import java.util.Objects;
 public class RideController {
     @Autowired
     private RideService rideService;
+
+    private RideRepository rideRepository;
 
     @PostMapping("/book")
     public ResponseEntity<?> bookRide(@RequestBody RideRequest request) {
@@ -115,6 +119,21 @@ public class RideController {
         Map<String, Object> response = new HashMap<>();
         response.put("estimatedFare", Math.round(estimatedFare * 100.0) / 100.0);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{rideId}/payment/success")
+    public ResponseEntity<?> confirmPayment(
+            @PathVariable Long rideId,
+            @RequestParam String razorpayPaymentId
+    ) {
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("Ride not found"));
+
+        ride.setPaymentStatus(paymentStatus.SUCCESS);
+        ride.setTransactionId(razorpayPaymentId); // Razorpay payment ID
+        rideRepository.save(ride);
+
+        return ResponseEntity.ok("Payment confirmed");
     }
 
 }
