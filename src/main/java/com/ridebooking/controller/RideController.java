@@ -9,6 +9,7 @@ import com.ridebooking.repository.RideRepository;
 import com.ridebooking.service.RideService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -25,12 +26,14 @@ public class RideController {
     private RideRepository rideRepository;
 
     @PostMapping("/book")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> bookRide(@RequestBody RideRequest request) {
         Ride ride = rideService.createRide(request);
         return ResponseEntity.ok(ride);
     }
 
     @PostMapping("/{rideId}/accept")
+    @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<String> acceptRide(
             @PathVariable Long rideId,
             @RequestParam Long driverId) {
@@ -40,12 +43,14 @@ public class RideController {
     }
 
     @PostMapping("/{rideId}/start")
+    @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<String> startRide(@PathVariable("rideId") Long rideId){
         rideService.startRide(rideId);
         return ResponseEntity.ok("Ride started successfully");
     }
 
     @PostMapping("/{rideId}/complete")
+    @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<String> completeRide(@PathVariable Long rideId,
                                                @RequestParam double distanceKm,
                                                @RequestParam double durationMinutes) {
@@ -55,6 +60,7 @@ public class RideController {
 
 
     @PostMapping("/{rideId}/cancel")
+    @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<?> cancelRide(@PathVariable Long rideId){
         try{
             Ride cancelRide = rideService.cancelRide(rideId);
@@ -66,6 +72,7 @@ public class RideController {
     }
 
     @PostMapping("/{rideId}/track")
+    @PreAuthorize("hasRole('DRIVER') or hasRole('USER')")
     public ResponseEntity<?> trackRide(@PathVariable Long rideId){
         try{
             rideStatus rideStatus = rideService.getRideStatus(rideId);
@@ -77,24 +84,28 @@ public class RideController {
     }
 
     @PostMapping("/user/{userId}/rides")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<Ride>> getUserRideHistory(@PathVariable Long userId){
         List<Ride> rides = rideService.getUserRideHistory(userId);
         return ResponseEntity.ok(rides);
     }
 
     @PostMapping("/driver/{driverId}/rides")
+    @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<List<Ride>> getDriverRideHistory(@PathVariable Long driverId){
         List<Ride> rides = rideService.getDirverRideHistory(driverId);
         return ResponseEntity.ok(rides);
     }
 
     @PostMapping("/rate")
+    @PreAuthorize("hasRole('DRIVER') or hasRole('USER')")
     public ResponseEntity<?> rateRide(@RequestBody RideRatingRequest request){
         rideService.rateRide(request);
         return ResponseEntity.ok("rating submitted successfully");
     }
 
     @GetMapping("/user/{userId}/current")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> getCurrentRideForUser(@PathVariable Long userId) {
         return rideService.getCurrentRideForUser(userId)
                 .map(ResponseEntity::ok)
@@ -102,6 +113,7 @@ public class RideController {
     }
 
     @GetMapping("/driver/{driverId}/current")
+    @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<?> getCurrentRideForDriver(@PathVariable Long driverId){
         return rideService.getCurrentRideForDriver(driverId)
                 .map(ResponseEntity::ok)

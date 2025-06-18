@@ -30,7 +30,7 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if(passwordEncoder.matches(password, user.getPassword()))
-            return jwtUtil.generateToken(user.getUsername());
+            return jwtUtil.generateToken(user.getEmail());
         else
             throw new RuntimeException("Invalid Password");
     }
