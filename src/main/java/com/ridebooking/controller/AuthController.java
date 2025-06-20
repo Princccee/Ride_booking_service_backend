@@ -1,6 +1,7 @@
 package com.ridebooking.controller;
 
 
+import com.ridebooking.model.Driver;
 import com.ridebooking.model.User;
 import com.ridebooking.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,5 +26,15 @@ public class AuthController {
     @PostMapping("/login")
     public String login(@RequestBody Map<String, String> credentials) {
         return authService.login(credentials.get("username"), credentials.get("password"));
+    }
+
+    @PostMapping("/registerDriver")
+    public String registerDriver(@RequestBody Driver driver){
+        return authService.registerDriver(driver);
+    }
+
+    @PostMapping("/loginDriver")
+    public String loginDriver(@RequestBody Map<String, String> credentials){
+        return authService.loginDriver(credentials.get("username"), credentials.get("password"));
     }
 }

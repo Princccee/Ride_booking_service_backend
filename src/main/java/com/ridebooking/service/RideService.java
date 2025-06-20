@@ -97,7 +97,7 @@ public class RideService {
                 .filter(driver -> calculateDistance(pickupLat, pickupLng, driver.getCurrentLatitude(), driver.getCurrentLongitude()) <= radiusKm)
                 .toList();
 
-//        if(nearbyDrivers.isEmpty()) throw new RuntimeException("No driver available now");
+        if(nearbyDrivers.isEmpty()) throw new RuntimeException("No driver available now");
 
         //Notify the nearby drivers
         for (Driver d : nearbyDrivers) {
