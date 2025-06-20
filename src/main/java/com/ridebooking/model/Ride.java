@@ -30,6 +30,12 @@ public class Ride extends base{
     @Column(nullable = false)
     private String dropoffLocation;
 
+    @Column(nullable = false)
+    private double pickupLattitude;
+
+    @Column(nullable = false)
+    private double pickupLongitude;
+
     @Column(name = "start_time")
     @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime startTime;
@@ -62,4 +68,9 @@ public class Ride extends base{
     @Column
     private Double durationMinutes;
 
+    @Enumerated(EnumType.STRING)
+    private paymentStatus paymentStatus;
+
+    @Column
+    private String transactionId;
 }

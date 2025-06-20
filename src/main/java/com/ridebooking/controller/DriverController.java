@@ -60,4 +60,14 @@ public class DriverController {
         driverService.updateDriverLocation(driverId, request.getLatitude(), request.getLongitude());
         return ResponseEntity.ok("Driver location updated");
     }
+
+    @PostMapping("/{driverId}/fcm-token")
+    public ResponseEntity<?> updateFcmToken(
+            @PathVariable Long driverId,
+            @RequestBody String token) {
+
+        driverService.updateFcmToken(driverId, token);
+        return ResponseEntity.ok("FCM token updated.");
+    }
+
 }
