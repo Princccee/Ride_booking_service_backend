@@ -23,5 +23,5 @@ public class User extends base{
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private Role role = Role.USER;
+    private Role role;
 }
