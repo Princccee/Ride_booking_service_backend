@@ -7,6 +7,7 @@ import com.ridebooking.model.*;
 import com.ridebooking.repository.DriverRepository;
 import com.ridebooking.repository.RideRepository;
 import com.ridebooking.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.*;
 
+@Slf4j
 @Service
 public class RideService {
 
@@ -87,6 +89,8 @@ public class RideService {
         double pickupLat = request.getPickupLattitude();
         double pickupLng = request.getPickupLongitude();
 
+        log.info("Ride request generated, pickupLat :{} and pickupLang: {}", pickupLat, pickupLng);
+
         // proximity to search in for the drivers
         double radiusKm = 5.0;
 
@@ -100,6 +104,7 @@ public class RideService {
 //        if(nearbyDrivers.isEmpty()) throw new RuntimeException("No driver available now");
 
         //Notify the nearby drivers
+        log.info("Notify all nearby drivers");
         for (Driver d : nearbyDrivers) {
             if (d.getFcmToken() != null) {
                 fcmService.sendNotification(
@@ -126,19 +131,25 @@ public class RideService {
 
     // This function handles the logic of accepting a ride from the driver side, and when a ride is accepted notify the other drivers as well that ride has already been taken.
     public void acceptRide(Long rideId, Long driverId) {
+        log.info("Accept ride initiated with rideId {} by driverId {}", rideId, driverId);
+
         //Get the ride for which the request has been raised
         Ride ride = rideRepository.findById(rideId)
                 .orElseThrow(() -> new RuntimeException("Ride not found"));
 
-        if(ride.getStatus() != rideStatus.REQUESTED && ride.getDriver() != null)
+        if(ride.getStatus() != rideStatus.REQUESTED && ride.getDriver() != null){
+            log.info("Ride has already been accepted");
             throw new RuntimeException("Ride has already been accepted");
+        }
 
         // fetch the driver from DB who is going to accept the ride
         Driver driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new RuntimeException("Driver not found"));
 
-        if (driver.getStatus() != driverStatus.AVAILABLE)
+        if (driver.getStatus() != driverStatus.AVAILABLE){
+            log.info("No drivers available nearby");
             throw new RuntimeException("Driver is not available");
+        }
 
         // Assign driver to the ride
         ride.setDriver(driver);
@@ -165,11 +176,14 @@ public class RideService {
                 .toList();
 
         // Notify other drivers (WebSocket) that ride has been taken
-        if(!nearbyDrivers.isEmpty())
+        if(!nearbyDrivers.isEmpty()){
+            log.info("Notifying nearby drivers that ride has been taken.");
             notifyRideTakenToOtherDrivers(rideId, driverId, nearbyDrivers);
+        }
     }
 
     public void startRide(Long rideId){
+        log.info("Start ride initiated with rideId {}", rideId);
         Ride ride = rideRepository.findById(rideId)
                 .orElseThrow(() -> new RuntimeException("Ride not found"));
 
@@ -218,6 +232,7 @@ public class RideService {
                 .orElseThrow(() -> new RuntimeException("Ride doesn't exist"));
 
         if (ride.getStatus() != rideStatus.STARTED) {
+            log.info("Ride has not yet started.");
             throw new RuntimeException("Ride is not in STARTED state");
         }
 
@@ -225,13 +240,17 @@ public class RideService {
         ride.setDistanceKm(distance);
         ride.setDurationMinutes(duration);
 
+        log.info("Ride distance {} and duration is {}.", distance, duration);
+
         // Calculate fare
         double fare = calculateFare(distance, duration);
+        log.info("Calculated fare {}", fare);
         ride.setFare(fare);
 
         // Set completion status & time
         ride.setStatus(rideStatus.COMPLETED);
         ride.setCompletionTime(LocalDateTime.now());
+        log.info("Ride {} completed at {}", rideId, LocalDateTime.now());
 
         // Mark driver as available again
         Driver driver = ride.getDriver();
