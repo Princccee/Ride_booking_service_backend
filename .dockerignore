@@ -1,0 +1,13 @@
+
+.gradle
+build
+out
+logs
+*.log
+.git
+.gitignore
+.idea
+.vscode
+*.iml
+/src/main/resources/firebase/firebase-service-account.json
+#gradle/wrapper/gradle-wrapper.jar

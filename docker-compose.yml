@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ride_db
+      MYSQL_USER: ride_app_user
+      MYSQL_PASSWORD: ride_pass
+      MYSQL_ROOT_PASSWORD: root_pass
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ride-service:
+    build: .
+    image: ride-service:local
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ride_db
+      SPRING_DATASOURCE_USERNAME: ride_app_user
+      SPRING_DATASOURCE_PASSWORD: ride_pass
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/firebase-service-account.json
+    volumes:
+      - ./src/main/resources/firebase/firebase-service-account.json:/secrets/firebase-service-account.json:ro
+    restart: on-failure
+
+volumes:
+  mysql_data:
